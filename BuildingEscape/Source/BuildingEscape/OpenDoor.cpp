@@ -1,6 +1,7 @@
 // Copyrigth Diego Cachafeiro 2018.
 
 #include "OpenDoor.h"
+#include "Engine/World.h"
 #include "GameFramework/Actor.h"
 
 
@@ -19,20 +20,36 @@ UOpenDoor::UOpenDoor()
 void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AActor* Owner = GetOwner();
-
-	FRotator NewRotation = FRotator(0.f, 60.f, 0.f);
-
-	Owner->SetActorRotation(NewRotation);
+	
+	Owner = GetOwner();
+	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
+void UOpenDoor::OpenDoor()
+{
+	Owner->SetActorRotation(FRotator(0.f, 90.f, 0.f));
+}
+
+void UOpenDoor::CloseDoor()
+{
+	Owner->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+}
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	//If the actor is in the volume Open door
+	if (PressurePlate->IsOverlappingActor(ActorThatOpens))
+	{
+		OpenDoor();
+		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+	}
 
-	// ...
+	//Check if it's time to close the door
+	if(GetWorld()->GetTimeSeconds() - LastDoorOpenTime > DoorCloseDelay)
+	{
+		CloseDoor();
+	}
 }
 
